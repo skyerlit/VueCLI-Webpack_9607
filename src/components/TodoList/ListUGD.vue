@@ -12,20 +12,23 @@
                     hide-details
                 ></v-text-field>
                 <v-spacer></v-spacer>
+                <v-select style="margin-right:30px; width:25px"
+                    v-model="sortingByP"
+                    :items="['Penting','Tidak penting']"
+                    @input="sortBy('idPriority',sortingByP)">
+                </v-select>
+
                 <v-btn color="success" dark @click="dialog = true">
                     Tambah
-                </v-btn>
-                 
+                </v-btn>           
             </v-card-title>
             <v-data-table :headers="headers" 
                             :items="todos" 
-                            :search="search" 
-                            :single-expand="singleExpand" 
-                            :expanded.sync="expanded" 
-                            :show-select="showSelect" 
-                            item-key="task" 
-                            show-expand 
-                            class="elevation-1">
+                            :search="search"
+                            expanded.sync="expanded"
+                            item-key="note"
+                            show-expand
+                            class = "elevation-1" >
                 <template v-slot:[`item.priority`]="{ item }">
                     <td>
                         <v-chip v-if="item.priority == 'Penting'" color="red" outlined>
@@ -39,19 +42,28 @@
                         </v-chip>
                     </td>
                 </template>
+
                 <template v-slot:expanded-item="{ headers, item }">
                     <td :colspan="headers.length">
-                        More info about {{ item.task }}
+                        <br>
+                        <h2 style="text-align:left">Note : </h2>
+                        <br>
+                        <h5 style="text-align:left">{{ item.note }}</h5>
+                        <br>
                     </td>
                 </template>
+                
                 <template v-slot:[`item.actions`]="{ item }">
-                    <v-btn small class="mr-2" @click="editItem(item)">
+                    <!--<v-btn small class="mr-2" @click="editItem(item)">
                         edit
                     </v-btn>
                     <v-btn small @click="deleteItem(item)">
                         delete
-                    </v-btn>
+                    </v-btn>-->
+                    <v-icon color="blue" @click="editItem(item)">edit</v-icon>
+                    <v-icon color="red" @click="deleteItem(item)">delete</v-icon>
                 </template>
+
             </v-data-table>
         </v-card>
         <v-dialog v-model="dialog" persistent max-width="600px">
@@ -104,6 +116,7 @@
     </v-main>
 </template>
 <script>
+    
     export default {
         name: "List",
         data() {
@@ -114,10 +127,7 @@
                 dialog: false,
                 dialogDelete: false,
                 indexwoi:-1,
-                slots:[
-                    'Penting',
-                    'Tidak Penting',
-                ],
+                sortingByP: null,
                 headers: [
                     {
                         text: "Task",
@@ -126,59 +136,50 @@
                         value: "task",
                     },
                     { text: "Priority", value: "priority" },
-                    { text: "Note", value: "note" },
                     { text: "Actions", value: "actions" },
-                    { text: "", value: "data-table-expand" },
+  
                 ],
                 todos: [
                     {
                         task: "bernafas",
                         priority: "Penting",
                         note: "huffttt",
+                        idPriority:3,
                     },
                     {
                         task: "nongkrong",
                         priority: "Tidak penting",
                         note: "bersama tman2",
+                        idPriority:1,
                     },
-                    {
+                    { 
                         task: "masak",
                         priority: "Biasa",
                         note: "masak air 500ml",
+                        idPriority:2,
                     },
                 ],
                 formTodo: {
                     task: null,
                     priority: null,
                     note: null,
+                    idPriority:null,
                 },
             };
         },
-
-        computed:{
-            showSelect(){
-                 return this.isEnabled('header.data-table-select') || this.isEnabled('item.data-table-select')
-            }
-        },
-
-        watch:{
-            enabled (slot) {
-                if (slot === 'no-data') {
-                    this.items = []
-                } else if (slot === 'no-results') {
-                    this.search = '...'
-                } else {
-                    this.search = null
-                    this.items = todos
-                }
-            },
-        },
         methods: {
-            isEnabled (slot) {
-                return this.enabled === slot
-            },
-
             save() {
+                if(this.formTodo.priority == "Penting")
+                {
+                    this.formTodo.idPriority = 3;
+                }else if(this.formTodo.priority == "Biasa")
+                {
+                    this.formTodo.idPriority = 2;
+                }else if(this.formTodo.priority == "Tidak penting")
+                {
+                    this.formTodo.idPriority = 1;
+                }
+
                 if(this.indexwoi == -1){
                     this.todos.push(this.formTodo);    
                 }else{
@@ -196,6 +197,7 @@
                     task: null,
                     priority: null,
                     note: null,
+                    idPriority:null,
                 };
                 this.indexwoi = -1;
             },
@@ -212,7 +214,6 @@
             deleteItem(item){
                 this.indexwoi = this.todos.indexOf(item);
                 this.dialogDelete = true;
-                console.log(indexwoi);
             },
             cancelDelete(){
                 this.dialogDelete = false;
@@ -222,7 +223,14 @@
                 this.todos.splice(this.indexwoi,1);
                 this.cancelDelete();
             },
-
+            sortBy(prop, x){
+                if(x == "Penting"){
+                    this.todos.sort((a,b) => a[prop] > b[prop] ? -1 : 1)
+                }else{
+                     this.todos.sort((a,b) => a[prop] < b[prop] ? -1 : 1)
+                }
+                
+            }
         },
     };
 </script>
